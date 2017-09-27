@@ -1,0 +1,16 @@
+{
+	"name": "extract-text-file-loader",
+	"version": "0.0.1",
+	"author": "Scott Leland Crossen",
+	"description": "calls file-loader on all require statements in a document
+    and replaces those instances with the public file path",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/scottcrossen/text-replace-file-loader.git"
+	},
+  "main": "index.js",
+	"license": "MIT",
+  "dependencies": {
+		"file-loader": "^0.11.2"
+	},
+}
