@@ -1,10 +1,8 @@
 [![npm][npm]][npm-url]
+[![Bower][bow]][bow-url]
 [![node][node]][node-url]
 [![deps][deps]][deps-url]
-
-[![npm](http://img.shields.io/npm/v/text-replace-file-loader.svg)](https://www.npmjs.com/package/text-replace-file-loader)
-[![Bower](http://img.shields.io/bower/v/text-replace-file-loader.svg)](http://bower.io/)
-[![License](https://img.shields.io/npm/l/text-replace-file-loader.svg)](LICENSE)
+[![License][lic]][lic-url]
 
 <div align="center">
   <a href="https://github.com/webpack/webpack">
@@ -132,3 +130,10 @@ Brady Parks, Sydney MacFarlane, John Hancock, Doug Patterson, Megan parks, Madis
 
 [deps]: https://david-dm.org/webpack/text-replace-file-loader.svg
 [deps-url]: https://david-dm.org/webpack/text-replace-file-loader
+
+[bow]: http://img.shields.io/bower/v/text-replace-file-loader.svg
+[bow-url]: http://bower.io/
+
+[lic]: https://img.shields.io/npm/l/text-replace-file-loader.svg
+[lic-url]: LICENSE
+
