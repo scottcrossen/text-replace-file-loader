@@ -120,7 +120,7 @@ file itself.
 
 <h2 align="center">Special Thanks</h2>
 
-Brady Parks, Sydney MacFarlane, John Hancock, Doug Patterson, Megan parks, Madison Russell
+Brady Parks, Sydney MacFarlane, John Hancock, Doug Patterson, Megan Parks, Madison Russell
 
 [npm]: https://img.shields.io/npm/v/text-replace-file-loader.svg
 [npm-url]: https://npmjs.com/package/text-replace-file-loader
