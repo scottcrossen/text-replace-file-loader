@@ -106,11 +106,20 @@ Note: If publicPath were 'myurl' then it would be 'myurl/image1.png' rather than
 
 <h2 align="center">Options & Config</h2>
 
-This module clones its context for every module it finds and passes it on to ```file-loader```. It's essentially an
-in-line parser for that module. Because of that, please reference ```file-loader```'s
+This module has two different options:
+- **recursion**: This sets the behavior when ```require('.*')``` statements are encountered. It can be one of three values. The default is *'emit'*.
+  - **'embed'**: This embeds imports into
+the file inline.
+  - **'emit'**: This creates a file in the bundle and
+replaces the import statement with the public path.
+  - **'none'**: This replaces the import statement with
+the best-guess at the module-name.
+- **emit**: This determines whether the final document is emitted to the bundle or not.
+Takes on boolean *true* or *false*. The default is *true*.
+
+Note that for file-emitting operations, this module clones its context and passes it on to ```file-loader```. Because of this, please reference ```file-loader```'s
 [main page](https://github.com/webpack-contrib/file-loader) for information on
-options and config. It should work the same (\but for file imports within the loading file rather than the loading
-file itself.
+options and config for emitting files. You can pass these options to this loader when emitting files.
 
 <h2 align="center">Contributors</h2>
 
@@ -136,4 +145,3 @@ Brady Parks, Sydney MacFarlane, John Hancock, Doug Patterson, Megan Parks, Madis
 
 [lic]: https://img.shields.io/npm/l/text-replace-file-loader.svg
 [lic-url]: LICENSE
-

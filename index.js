@@ -1,10 +1,32 @@
 const fs = require('fs')
 const fileLoader = require('file-loader')
+const loaderUtils = require('loader-utils')
 
-module.exports = function(source) {
+/**
+  Forewarning: This is a very hackish solution to a problem. This loader is suppose
+  to search through a file (of any type) for literal require statements which it
+  will then handle and replace with the public path of the file. The only problem is that
+  loaders aren't really suppose to process dependency trees. This would be fine if there
+  was an way to create entrypoints on the compilation object of the webpack build from a
+  loader but there isn't. Really, this whole project should be handled as a plugin and not
+  a loader but I'm too lazy to do that because I already have this finished.
+*/
+const textReplaceFileLoader = function(source) {
 
   // Fs calls and resolve calls are Async so we'll output it like that too.
   const callback = this.async()
+
+  // Dependencies will be properly loaded.
+  this.cacheable(true)
+
+  // Load options
+  const options = Object.assign({},
+    {
+      recursion: 'emit', // 'emit', 'embed', 'none'
+      emit: true, // true or false
+    },
+    loaderUtils.getOptions(this)
+  )
 
   // Keep going through the file untill there are no more instances left.
   const recurseThroughFile = function(file) {
@@ -40,22 +62,77 @@ module.exports = function(source) {
       const newResourcePath = data.resourcePath
       const newResource = newResourcePath + this.resourceQuery
       const newRequest = this.request.substring(0, this.request.lastIndexOf('!')) + '!' + newResource
-      const boundFileLoader = fileLoader.bind(Object.assign({}, this, {resource: newResource, resourcePath: newResourcePath, request: newRequest}))
-      // Emit whatever file was found via file-loader.
-      const emittedFile = boundFileLoader(data.data)
-      // Extract the public name of the resultant file.
-      const lastIndex = emittedFile.lastIndexOf('\"')
-      const firstIndex = emittedFile.substring(0, lastIndex).lastIndexOf('\"') + 1
-      const rootPath = this.options.output.publicPath
-      // Replace require statement with public path of file
-      const fullPath = ((rootPath.substr(-1) != '/') ? rootPath + '/' : rootPath) + emittedFile.substring(firstIndex, lastIndex)
+      this.dependency(newResourcePath)
+      if (options.recursion != 'none') {
+        return (new Promise(function(resolve, reject) {
+          const boundFileLoader = textReplaceFileLoader.bind(Object.assign({}, this, {
+            resource: newResource,
+            resourcePath: newResourcePath,
+            request: newRequest,
+            query: Object.assign({}, options, {emit: options.recursion == 'emit'}),
+            // Turn the output of the recursive call into a promise.
+            async: function() {
+              return function(arg1, arg2) {
+                if (arg1) {
+                  reject(arg1)
+                } else {
+                  resolve(arg2)
+                }
+              }
+            },
+            // No need to specify this again.
+            cacheable: function(bool) {
+            }
+          }))
+          boundFileLoader(data.data)
+        }.bind(this))).then(function(emittedData) {
+          if (options.recursion == 'emit' || newRequest.match(/.(jpg|jpeg|png|gif)$/i)) {
+            // Extract the public name of the resultant file from file-loader
+            const lastIndex = emittedData.lastIndexOf('\"')
+            const firstIndex = emittedData.substring(0, lastIndex).lastIndexOf('\"') + 1
+            const publicFile = emittedData.substring(firstIndex, lastIndex)
+            // Replace require statement with public path of file
+            const rootPath = this.options.output.publicPath
+            const fullPath = ((rootPath.substr(-1) != '/') ? rootPath + '/' : rootPath) + publicFile
+            return fullPath
+          } else {
+            return emittedData
+          }
+        }.bind(this))
+      } else {
+        const rootPath = this.options.output.publicPath
+        const fullPath = loaderUtils.urlToRequest(mustResolveFile)
+        return Promise.resolve(fullPath)
+      }
+    }.bind(this)).then(function(emittedFile) {
       // Continue recursion
-      return recurseThroughFile(file.substring(0, startIndex) + fullPath + file.substring(endIndex + 1))
+      return recurseThroughFile(file.substring(0, startIndex) + emittedFile + file.substring(endIndex + 1))
     }.bind(this))
   }.bind(this)
 
-  // Actually execute the thing and call the callback if necessary.
-  recurseThroughFile(source)
-    .then(function(data) {callback(null, data)})
+  const boundFileLoader = fileLoader.bind(this)
+
+  // The recursion could happen with image files too but it's just quicker to not.
+  const getPromise = function() {
+    if (this.request.match(/.(jpg|jpeg|png|gif)$/i)) {
+      return Promise.resolve(boundFileLoader(source))
+    } else {
+      // Actually execute the recursive thing and call the callback if necessary.
+      return recurseThroughFile(typeof source === 'string' ? source : source.toString()).then(function(raw) {
+        const data = Buffer.from(raw, 'binary')
+        if (options.emit) {
+          return boundFileLoader(data)
+        } else {
+          return data
+        }
+      }.bind(this))
+    }
+  }.bind(this)
+
+  // Emit the final file: I'm not going to chain this with the file-loader.
+  getPromise().then(function(data) {callback(null, data)})
     .catch(function(err) {callback(err)})
 }
+
+module.exports = textReplaceFileLoader
+module.exports.raw = true
