@@ -124,7 +124,7 @@ options and config for emitting files. You can pass these options to this loader
 <h2 align="center">Contributors</h2>
 
 ### Scott Leland Crossen  
-<http://scottcrossen42.com>  
+<http://scottcrossen.com>  
 <scottcrossen42@gmail.com>
 
 <h2 align="center">Special Thanks</h2>
